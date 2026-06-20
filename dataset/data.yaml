@@ -1,0 +1,11 @@
+names:
+- missing_hole
+- mouse_bite
+- open_circuit
+- short
+- spur
+- spurious_copper
+nc: 6
+path: D:\PCB_AOI_System\dataset
+train: images/train
+val: images/val
