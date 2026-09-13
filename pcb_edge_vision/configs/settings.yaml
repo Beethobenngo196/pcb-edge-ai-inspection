@@ -1,0 +1,20 @@
+# ==========================================
+# CẤU HÌNH HỆ THỐNG EDGE AI INSPECTION
+# ==========================================
+
+# 1. Cấu hình Camera / Nguồn video
+camera:
+  source: 0  # Đổi thành đường dẫn video nếu muốn giả lập (VD: "D:/.../video.mp4")
+  width: 640
+  height: 480
+
+# 2. Cấu hình Nhận diện AI (YOLO)
+ai_model:
+  weights_path: "pcb_edge_vision/models/yolo26n.pt"
+  confidence_threshold: 0.5  # Chỉ báo lỗi nếu AI chắc chắn > 50%
+
+# 3. Cấu hình Giao tiếp phần cứng (UART)
+serial:
+  port: "COM2"       # Cổng kết nối với Proteus / Vi điều khiển
+  baudrate: 115200
+  timeout: 1
