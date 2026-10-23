@@ -1,0 +1,11 @@
+metric,value
+model,models/pcb_defect_model_V2.pt
+val_images,139
+conf_thresh,0.2
+iou_thresh,0.45
+TP,501
+FP,43
+FN,88
+precision,0.921
+recall,0.8506
+f1,0.8844

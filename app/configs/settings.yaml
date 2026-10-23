@@ -1,0 +1,23 @@
+# =============================================================
+# Cấu hình hệ thống PCB Edge AI Inspection
+# =============================================================
+
+ai_model:
+  weights_path: models/pcb_defect_model_V2.pt
+  confidence_threshold: 0.20        # Ngưỡng tin cậy tối thiểu để chấp nhận detection
+
+camera:
+  source: 0                               # Webcam thật (USB camera tại trạm AOI)
+  # source: dataset/pcb_conveyor_simulation_v2.mp4  # Dùng để test offline
+
+serial:
+  port: COM3                        # Đổi thành cổng COM thực tế (vd: COM4, /dev/ttyUSB0)
+  baudrate: 115200
+
+output:
+  video_path: logs/output_annotated.mp4
+  save_video: true
+
+display:
+  fps: 30                           # FPS giới hạn hiển thị (khớp với FPS gốc video)
+
