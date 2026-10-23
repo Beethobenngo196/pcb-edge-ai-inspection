@@ -1,50 +1,77 @@
 """
-training/train_ai.py — Fine-tune YOLOv8 model cho PCB defect detection.
+training/train_ai.py — Huấn luyện mô hình mạnh nhất YOLOv8m (Medium - 25.9M tham số)
+Tối ưu hóa đặc biệt cho card NVIDIA GeForce RTX 3050 Laptop GPU (4GB VRAM).
 
-Cách dùng (chạy từ thư mục gốc project):
-    python training/train_ai.py
+Đặc điểm:
+- Dung lượng mạng gấp 10 lần bản Nano (25.9M params vs 2.6M params).
+- Độ phân giải cao imgsz=960.
+- Khả năng phân biệt các vi khuyết tật (mẻ mạch, đứt mạch vi mô) vượt trội.
 """
 
+import os
+import shutil
+import yaml
 from ultralytics import YOLO
 
 
 def main():
-    # Fine-tune TIẾP từ model đã train (không train lại từ đầu)
-    model = YOLO("models/pcb_defect_model_V2.pt")
+    base_model = "models/yolov8m.pt"
 
-    print("[*] Fine-tune với augmentation mạnh về màu/ánh sáng (domain randomization)...")
-    print("[*] Mục tiêu: giảm phụ thuộc vào màu nền, ép model học theo HÌNH DẠNG lỗi.")
+    print("=" * 68)
+    print("  BAT DAU HUAN LUYEN MODEL MANH NHAT: YOLOv8-MEDIUM (25.9M Tham so)")
+    print(f"  Trọng số gốc : {base_model}")
+    print("  Phần cứng     : NVIDIA GeForce RTX 3050 Laptop GPU (device=0)")
+    print("  Cấu hình      : imgsz=960 | batch=2 | epochs=30 | AMP=True")
+    print("=" * 68)
 
-    model.train(
+    model = YOLO(base_model)
+
+    # Huấn luyện mô hình YOLOv8-Medium
+    results = model.train(
         data="dataset/data.yaml",
-        epochs=50,
-        imgsz=640,
-        batch=8,
-        device=0,
-        workers=0,
+        epochs=30,
+        imgsz=960,
+        batch=2,              # batch=2 tối ưu cho 4GB VRAM của RTX 3050 (chiếm ~2.16GB)
+        device=0,             # GPU RTX 3050
+        workers=0,            # Ổn định tuyệt đối trên Windows
         project="training/runs",
-        name="yolov8_pcb_model_v3",
+        name="yolov8m_pcb_model_v4",
+        exist_ok=True,
 
-        # --- Augmentation màu sắc / ánh sáng ---
-        hsv_h=0.5,
-        hsv_s=0.7,
+        # Augmentation chuyên dụng cho bo mạch
+        hsv_h=0.015,
+        hsv_s=0.5,
         hsv_v=0.4,
-
-        # --- Augmentation hình học ---
-        degrees=10,
-        translate=0.1,
-        scale=0.3,
+        degrees=5.0,
+        translate=0.05,
+        scale=0.2,
         fliplr=0.5,
         flipud=0.0,
-
-        # --- Mosaic/mixup ---
-        mosaic=1.0,
-        mixup=0.1,
-
-        patience=20,
+        mosaic=0.5,
+        patience=10,          # Dừng sớm nếu không cải thiện sau 10 epoch
     )
-    print("[*] Fine-tune hoàn tất! Weights mới: training/runs/yolov8_pcb_model_v3/weights/best.pt")
-    print("[*] Nếu mAP cải thiện, copy best.pt vào models/ và cập nhật settings.yaml.")
+
+    best_pt = "training/runs/yolov8m_pcb_model_v4/weights/best.pt"
+    v4_dest = "models/pcb_defect_model_V4_medium.pt"
+
+    if os.path.exists(best_pt):
+        shutil.copy(best_pt, v4_dest)
+        print("\n" + "=" * 68)
+        print(f"[HOÀN TẤT] Đã tạo xong model V4 Medium đỉnh nhất tại: {v4_dest}")
+
+        # Tự động cập nhật cấu hình settings.yaml
+        cfg_path = "app/configs/settings.yaml"
+        if os.path.exists(cfg_path):
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                cfg = yaml.safe_load(f)
+            cfg["ai_model"]["weights_path"] = v4_dest
+            cfg["ai_model"]["imgsz"] = 960
+            with open(cfg_path, "w", encoding="utf-8") as f:
+                yaml.safe_dump(cfg, f, default_flow_style=False, allow_unicode=True)
+            print(f"[CẬP NHẬT] Đã trỏ settings.yaml sang model V4 Medium!")
+        print("=" * 68)
+    else:
+        print(f"[CẢNH BÁO] Không tìm thấy file {best_pt}")
 
 
 if __name__ == "__main__":

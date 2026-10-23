@@ -1,4 +1,4 @@
-path: dataset
+path: D:/pcb-edge-ai-inspection/dataset
 train: images/train
 val: images/val
 nc: 6
